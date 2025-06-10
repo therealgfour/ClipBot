@@ -1,13 +1,13 @@
 [
 {
-  "modid": "examplemod",
-  "name": "Example Mod",
-  "description": "Give a description of your mod here, it will show in the modlist menu",
+  "modid": "clipbot",
+  "name": "ClipBot",
+  "description": "A mod that provides you a bot to clip",
   "version": "${version}",
   "mcversion": "${mcversion}",
   "url": "",
   "updateUrl": "",
-  "authorList": ["Put your name here!"],
+  "authorList": ["drvzs"],
   "credits": "",
   "logoFile": "",
   "screenshots": [],
