@@ -4,7 +4,9 @@ import me.drvzs.bot.commands.Command;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.settings.KeyBinding;
+import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.network.NetHandlerPlayServer;
 import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.MathHelper;
 import net.minecraft.util.MovementInput;
@@ -48,15 +50,8 @@ public class EventListener {
 
         EntityPlayerSP player = mc.thePlayer;
 
-        MovementInput movementInput = player.movementInput;
-        movementInput.moveForward = 1.0F;
-        player.setSprinting(true);
         KeyBinding.setKeyBindState(mc.gameSettings.keyBindSprint.getKeyCode(), true); // Simulate sprint key
         KeyBinding.setKeyBindState(mc.gameSettings.keyBindForward.getKeyCode(), true); // Simulate forward key
-
-        float yawRad = player.rotationYaw * (float) (Math.PI / 180);
-        player.motionX = -MathHelper.sin(yawRad) * 0.2F;
-        player.motionZ = MathHelper.cos(yawRad) * 0.2F;
 
         EntityPlayer target = findNearestPlayer();
         if (target != null) {
@@ -106,8 +101,8 @@ public class EventListener {
         float yawDiff = normalizeAngle(targetYaw - currentYaw);
         float pitchDiff = targetPitch - currentPitch;
         // 0.7 is the med value, lower = smoother and slower, higher = faster
-        player.rotationYaw = currentYaw + yawDiff * 0.7F;
-        player.rotationPitch = currentPitch + pitchDiff * 0.7F;
+        player.rotationYaw = currentYaw + yawDiff * 0.3F;
+        player.rotationPitch = currentPitch + pitchDiff * 0.3F;
 
         player.rotationYaw = normalizeAngle(player.rotationYaw);
         player.rotationPitch = MathHelper.clamp_float(player.rotationPitch, -90, 90);
