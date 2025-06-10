@@ -4,17 +4,17 @@ import me.drvzs.bot.commands.Command;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.settings.KeyBinding;
-import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.network.NetHandlerPlayServer;
+import net.minecraft.network.play.client.C02PacketUseEntity;
+import net.minecraft.network.play.client.C0APacketAnimation;
 import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.MathHelper;
-import net.minecraft.util.MovementInput;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.InputEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import org.lwjgl.input.Keyboard;
+import java.util.Random;
 
 public class EventListener {
 
@@ -22,6 +22,9 @@ public class EventListener {
     private final Minecraft mc = Minecraft.getMinecraft();
     private float targetYaw = 0;
     private float targetPitch = 0;
+    private int tickCounter = 0;
+    private boolean isSwingPending = false;
+    private final Random random = new Random();
 
     public EventListener() {
         ClientRegistry.registerKeyBinding(toggleKeybind);
@@ -38,20 +41,43 @@ public class EventListener {
                     player.movementInput.moveForward = 1.0F;
                     player.setSprinting(true);
                 }
+            } else {
+                KeyBinding.setKeyBindState(mc.gameSettings.keyBindSprint.getKeyCode(), false);
+                KeyBinding.setKeyBindState(mc.gameSettings.keyBindForward.getKeyCode(), false);
+                tickCounter = 0;
+                isSwingPending = false;
             }
         }
     }
 
     @SubscribeEvent
     public void onClientTick(TickEvent.ClientTickEvent event) {
-        if (event.phase != TickEvent.Phase.START || mc.thePlayer == null || !Command.isClipBotEnabled) {
+        if (event.phase != TickEvent.Phase.START || mc.thePlayer == null || !Command.isClipBotEnabled || mc.currentScreen != null || mc.thePlayer.isDead) {
             return;
         }
 
         EntityPlayerSP player = mc.thePlayer;
 
-        KeyBinding.setKeyBindState(mc.gameSettings.keyBindSprint.getKeyCode(), true); // Simulate sprint key
-        KeyBinding.setKeyBindState(mc.gameSettings.keyBindForward.getKeyCode(), true); // Simulate forward key
+        KeyBinding.setKeyBindState(mc.gameSettings.keyBindSprint.getKeyCode(), true);
+        KeyBinding.setKeyBindState(mc.gameSettings.keyBindForward.getKeyCode(), true);
+
+        tickCounter++;
+        int ticksPerClick = Math.round(20.0f / 7.0f); // ~2.857 ticks per click
+        if (tickCounter >= ticksPerClick) {
+            if (!isSwingPending) {
+                player.sendQueue.addToSendQueue(new C0APacketAnimation());
+                player.swingItem();
+                isSwingPending = true;
+
+                EntityPlayer target = findNearestPlayer();
+                if (target != null && player.getDistanceToEntity(target) <= 3.0) {
+                    player.sendQueue.addToSendQueue(new C02PacketUseEntity(target, C02PacketUseEntity.Action.ATTACK));
+                }
+            } else {
+                isSwingPending = false;
+                tickCounter = 0;
+            }
+        }
 
         EntityPlayer target = findNearestPlayer();
         if (target != null) {
@@ -66,12 +92,12 @@ public class EventListener {
         double closestDistance = Double.MAX_VALUE;
 
         for (EntityPlayer obj : mc.theWorld.playerEntities) {
-            if (obj == null || obj == player) {
+            if (obj == null || obj == player || !obj.isEntityAlive()) {
                 continue;
             }
 
             double distance = player.getDistanceToEntity(obj);
-            if (distance < closestDistance && obj.isEntityAlive()) {
+            if (distance < closestDistance) {
                 closestDistance = distance;
                 closestPlayer = obj;
             }
@@ -83,12 +109,16 @@ public class EventListener {
     private void calculateTargetAngles(EntityPlayer target) {
         EntityPlayerSP player = mc.thePlayer;
         double dx = target.posX - player.posX;
-        double dy = (target.posY + target.getEyeHeight() / 2) - (player.posY + player.getEyeHeight());
+        double dy = (target.posY + target.getEyeHeight() / 2) - (player.posY + player.getEyeHeight()) + 0.5;
         double dz = target.posZ - player.posZ;
 
         double distance = MathHelper.sqrt_double(dx * dx + dz * dz);
         targetYaw = (float) (Math.atan2(dz, dx) * 180 / Math.PI) - 90;
         targetPitch = (float) -(Math.atan2(dy, distance) * 180 / Math.PI);
+
+        // 0.5 is the med value, lower = smoother and slower, higher = faster
+        targetYaw += random.nextFloat() * 0.5f - 0.25f;
+        targetPitch += random.nextFloat() * 0.5f - 0.25f;
 
         targetYaw = normalizeAngle(targetYaw);
         targetPitch = MathHelper.clamp_float(targetPitch, -90, 90);
@@ -100,9 +130,9 @@ public class EventListener {
 
         float yawDiff = normalizeAngle(targetYaw - currentYaw);
         float pitchDiff = targetPitch - currentPitch;
-        // 0.7 is the med value, lower = smoother and slower, higher = faster
-        player.rotationYaw = currentYaw + yawDiff * 0.3F;
-        player.rotationPitch = currentPitch + pitchDiff * 0.3F;
+
+        player.rotationYaw = currentYaw + yawDiff * 0.5F;
+        player.rotationPitch = currentPitch + pitchDiff * 0.5F;
 
         player.rotationYaw = normalizeAngle(player.rotationYaw);
         player.rotationPitch = MathHelper.clamp_float(player.rotationPitch, -90, 90);
