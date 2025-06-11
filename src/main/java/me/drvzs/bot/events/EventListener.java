@@ -68,11 +68,6 @@ public class EventListener {
                 player.sendQueue.addToSendQueue(new C0APacketAnimation());
                 player.swingItem();
                 isSwingPending = true;
-
-                EntityPlayer target = findNearestPlayer();
-                if (target != null && player.getDistanceToEntity(target) <= 3.0) {
-                    player.sendQueue.addToSendQueue(new C02PacketUseEntity(target, C02PacketUseEntity.Action.ATTACK));
-                }
             } else {
                 isSwingPending = false;
                 tickCounter = 0;
