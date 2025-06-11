@@ -109,7 +109,7 @@ public class EventListener {
     private void calculateTargetAngles(EntityPlayer target) {
         EntityPlayerSP player = mc.thePlayer;
         double dx = target.posX - player.posX;
-        double dy = (target.posY + target.getEyeHeight() / 2) - (player.posY + player.getEyeHeight()) + 0.5;
+        double dy = (target.posY + target.getEyeHeight() + 0.4) - (player.posY + player.getEyeHeight());
         double dz = target.posZ - player.posZ;
 
         double distance = MathHelper.sqrt_double(dx * dx + dz * dz);
