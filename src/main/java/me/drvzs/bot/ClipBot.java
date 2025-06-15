@@ -1,7 +1,7 @@
 package me.drvzs.bot;
 
-import me.drvzs.bot.commands.Command;
-import me.drvzs.bot.events.EventListener;
+import me.drvzs.bot.command.BotCommand;
+import me.drvzs.bot.event.EventListener;
 import net.minecraftforge.client.ClientCommandHandler;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.Mod;
@@ -20,7 +20,7 @@ public class ClipBot {
 
     @EventHandler
     public void init(FMLInitializationEvent event) {
-        ClientCommandHandler.instance.registerCommand(new Command());
+        ClientCommandHandler.instance.registerCommand(new BotCommand());
         MinecraftForge.EVENT_BUS.register(new EventListener());
     }
 }

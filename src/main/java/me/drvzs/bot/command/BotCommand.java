@@ -1,4 +1,4 @@
-package me.drvzs.bot.commands;
+package me.drvzs.bot.command;
 
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.ICommandSender;
@@ -7,7 +7,7 @@ import net.minecraft.util.ChatComponentText;
 
 import java.util.List;
 
-public class Command extends CommandBase {
+public class BotCommand extends CommandBase {
 
     public static boolean isClipBotEnabled = false;
 
@@ -32,7 +32,7 @@ public class Command extends CommandBase {
             isClipBotEnabled = !isClipBotEnabled;
             sender.addChatMessage(new ChatComponentText("ClipBot " + (isClipBotEnabled ? "enabled" : "disabled")));
         } else {
-            sender.addChatMessage(new ChatComponentText("wrong usage: " + getCommandUsage(sender)));
+            sender.addChatMessage(new ChatComponentText("Wrong usage: " + getCommandUsage(sender)));
         }
     }
 
