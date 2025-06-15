@@ -4,7 +4,10 @@ import me.drvzs.bot.command.BotCommand;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.settings.KeyBinding;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.network.play.client.C03PacketPlayer;
 import net.minecraft.network.play.client.C0APacketAnimation;
 import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.MathHelper;
@@ -14,17 +17,11 @@ import net.minecraftforge.fml.common.gameevent.InputEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import org.lwjgl.input.Keyboard;
 
-import java.util.Random;
-
 public class EventListener {
-
     private final KeyBinding toggleKeybind = new KeyBinding("Toggle ClipBot", Keyboard.KEY_K, "ClipBot");
-    private final Minecraft mc = Minecraft.getMinecraft();
-    private float targetYaw = 0;
-    private float targetPitch = 0;
+    private static final Minecraft mc = Minecraft.getMinecraft();
     private int tickCounter = 0;
     private boolean isSwingPending = false;
-    private final Random random = new Random();
 
     public EventListener() {
         ClientRegistry.registerKeyBinding(toggleKeybind);
@@ -76,8 +73,7 @@ public class EventListener {
 
         EntityPlayer target = findNearestPlayer();
         if (target != null) {
-            calculateTargetAngles(target);
-            aim(player);
+            aim(target, 0.0F, false);
         }
     }
 
@@ -101,45 +97,42 @@ public class EventListener {
         return closestPlayer;
     }
 
-    private void calculateTargetAngles(EntityPlayer target) {
-        EntityPlayerSP player = mc.thePlayer;
-        double dx = target.posX - player.posX;
-        double dy = (target.posY + target.getEyeHeight() + 0.4) - (player.posY + player.getEyeHeight());
-        double dz = target.posZ - player.posZ;
+    // Credits: Blowsy
+    public static void aim(EntityPlayer player, float ps, boolean pc) {
+        if (player != null) {
+            float[] t = getTargetRotations(player);
+            if (t != null) {
+                float y = t[0];
+                float p = t[1] + 4.0F + ps;
+                if (pc) {
+                    mc.getNetHandler().addToSendQueue(new C03PacketPlayer.C05PacketPlayerLook(y, p, mc.thePlayer.onGround));
+                } else {
+                    mc.thePlayer.rotationYaw = y;
+                    mc.thePlayer.rotationPitch = p;
+                }
+            }
 
-        double distance = Math.hypot(dx, dz);
-        targetYaw = (float) (Math.atan2(dz, dx) * 180 / Math.PI) - 90;
-        targetPitch = (float) -(Math.atan2(dy, distance) * 180 / Math.PI);
-
-        // 0.5 is the med value, lower = smoother and slower, higher = faster
-        targetYaw += random.nextFloat() * 0.5f - 0.25f;
-        targetPitch += random.nextFloat() * 0.5f - 0.25f;
-
-        targetYaw = normalizeAngle(targetYaw);
-        targetPitch = MathHelper.clamp_float(targetPitch, -90, 90);
-    }
-
-    private void aim(EntityPlayerSP player) {
-        float currentYaw = normalizeAngle(player.rotationYaw);
-        float currentPitch = player.rotationPitch;
-
-        float yawDiff = normalizeAngle(targetYaw - currentYaw);
-        float pitchDiff = targetPitch - currentPitch;
-
-        player.rotationYaw = currentYaw + yawDiff * 0.5F;
-        player.rotationPitch = currentPitch + pitchDiff * 0.5F;
-
-        player.rotationYaw = normalizeAngle(player.rotationYaw);
-        player.rotationPitch = MathHelper.clamp_float(player.rotationPitch, -90, 90);
-    }
-
-    private float normalizeAngle(float angle) {
-        angle = angle % 360;
-        if (angle > 180) {
-            angle -= 360;
-        } else if (angle < -180) {
-            angle += 360;
         }
-        return angle;
+    }
+
+    public static float[] getTargetRotations(Entity q) {
+        if (q == null) {
+            return null;
+        } else {
+            double diffX = q.posX - mc.thePlayer.posX;
+            double diffY;
+            if (q instanceof EntityLivingBase) {
+                EntityLivingBase en = (EntityLivingBase) q;
+                diffY = en.posY + (double) en.getEyeHeight() * 0.9D - (mc.thePlayer.posY + (double) mc.thePlayer.getEyeHeight());
+            } else {
+                diffY = (q.getEntityBoundingBox().minY + q.getEntityBoundingBox().maxY) / 2.0D - (mc.thePlayer.posY + (double) mc.thePlayer.getEyeHeight());
+            }
+
+            double diffZ = q.posZ - mc.thePlayer.posZ;
+            double dist = MathHelper.sqrt_double(diffX * diffX + diffZ * diffZ);
+            float yaw = (float) (Math.atan2(diffZ, diffX) * 180.0D / 3.141592653589793D) - 90.0F;
+            float pitch = (float) (-(Math.atan2(diffY, dist) * 180.0D / 3.141592653589793D));
+            return new float[]{mc.thePlayer.rotationYaw + MathHelper.wrapAngleTo180_float(yaw - mc.thePlayer.rotationYaw), mc.thePlayer.rotationPitch + MathHelper.wrapAngleTo180_float(pitch - mc.thePlayer.rotationPitch)};
+        }
     }
 }
