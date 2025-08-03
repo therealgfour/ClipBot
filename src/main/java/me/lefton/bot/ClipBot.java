@@ -1,7 +1,7 @@
-package me.fayne.bot;
+package me.lefton.bot;
 
-import me.fayne.bot.command.BotCommand;
-import me.fayne.bot.event.EventListener;
+import me.lefton.bot.command.BotCommand;
+import me.lefton.bot.event.EventListener;
 import net.minecraftforge.client.ClientCommandHandler;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.Mod;

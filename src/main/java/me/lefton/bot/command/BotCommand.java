@@ -1,4 +1,4 @@
-package me.fayne.bot.command;
+package me.lefton.bot.command;
 
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.ICommandSender;

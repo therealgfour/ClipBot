@@ -1,6 +1,6 @@
-package me.fayne.bot.event;
+package me.lefton.bot.event;
 
-import me.fayne.bot.command.BotCommand;
+import me.lefton.bot.command.BotCommand;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.settings.KeyBinding;
