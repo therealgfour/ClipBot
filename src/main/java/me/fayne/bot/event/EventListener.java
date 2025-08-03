@@ -1,6 +1,6 @@
-package me.drvzs.bot.event;
+package me.fayne.bot.event;
 
-import me.drvzs.bot.command.BotCommand;
+import me.fayne.bot.command.BotCommand;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.settings.KeyBinding;
@@ -98,24 +98,32 @@ public class EventListener {
     }
 
     // Credits: Blowsy
-    public static void aim(EntityPlayer player, float ps, boolean pc) {
-        if (player != null) {
+    public void aim(EntityPlayer player, float ps, boolean pc) {
+        if (isInFOV(player, 90.0F)) {
             float[] t = getTargetRotations(player);
             if (t != null) {
-                float y = t[0];
-                float p = t[1] + 4.0F + ps;
+                float yaw = t[0];
+                float pitch = MathHelper.clamp_float(t[1] + 4.0F + ps, -90.0F, 90.0F);
                 if (pc) {
-                    mc.getNetHandler().addToSendQueue(new C03PacketPlayer.C05PacketPlayerLook(y, p, mc.thePlayer.onGround));
+                    mc.getNetHandler().addToSendQueue(new C03PacketPlayer.C05PacketPlayerLook(yaw, pitch, mc.thePlayer.onGround));
                 } else {
-                    mc.thePlayer.rotationYaw = y;
-                    mc.thePlayer.rotationPitch = p;
+                    mc.thePlayer.rotationYaw = yaw;
+                    mc.thePlayer.rotationPitch = pitch;
                 }
             }
 
         }
     }
 
-    public static float[] getTargetRotations(Entity q) {
+    public boolean isInFOV(Entity target, float maxFov) {
+        if (target == null) return false;
+
+        float[] rotations = getTargetRotations(target);
+        float yawDifference = MathHelper.wrapAngleTo180_float(rotations[0] - mc.thePlayer.rotationYaw);
+        return Math.abs(yawDifference) <= maxFov;
+    }
+
+    public float[] getTargetRotations(Entity q) {
         if (q == null) {
             return null;
         } else {

@@ -1,4 +1,4 @@
-package me.drvzs.bot.command;
+package me.fayne.bot.command;
 
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.ICommandSender;

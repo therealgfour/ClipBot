@@ -1,7 +1,7 @@
-package me.drvzs.bot;
+package me.fayne.bot;
 
-import me.drvzs.bot.command.BotCommand;
-import me.drvzs.bot.event.EventListener;
+import me.fayne.bot.command.BotCommand;
+import me.fayne.bot.event.EventListener;
 import net.minecraftforge.client.ClientCommandHandler;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.Mod;
