@@ -83,7 +83,7 @@ public class EventListener {
         double closestDistance = Double.MAX_VALUE;
 
         for (EntityPlayer obj : mc.theWorld.playerEntities) {
-            if (obj == null || obj == player || !obj.isEntityAlive()) {
+            if (obj == player || !obj.isEntityAlive()) {
                 continue;
             }
 
@@ -101,15 +101,13 @@ public class EventListener {
     public void aim(EntityPlayer player, float ps, boolean pc) {
         if (isInFOV(player, 90.0F)) {
             float[] t = getTargetRotations(player);
-            if (t != null) {
-                float yaw = t[0];
-                float pitch = MathHelper.clamp_float(t[1] + 4.0F + ps, -90.0F, 90.0F);
-                if (pc) {
-                    mc.getNetHandler().addToSendQueue(new C03PacketPlayer.C05PacketPlayerLook(yaw, pitch, mc.thePlayer.onGround));
-                } else {
-                    mc.thePlayer.rotationYaw = yaw;
-                    mc.thePlayer.rotationPitch = pitch;
-                }
+            float yaw = t[0];
+            float pitch = MathHelper.clamp_float(t[1] + 4.0F + ps, -90.0F, 90.0F);
+            if (pc) {
+                mc.getNetHandler().addToSendQueue(new C03PacketPlayer.C05PacketPlayerLook(yaw, pitch, mc.thePlayer.onGround));
+            } else {
+                mc.thePlayer.rotationYaw = yaw;
+                mc.thePlayer.rotationPitch = pitch;
             }
 
         }
